@@ -1,0 +1,51 @@
+<script type="text/javascript" src="domful.js"></script>
+<div id="meow">hi</div>
+<script type="text/javascript">
+    var tests = [];
+    tests.push(
+        DOMful.parse({
+            'table#mainTable[data-type="test"]': [
+                {
+                    'tr' : [
+                        { 'td.label': 'Label!' },
+                        { 'td.input':
+                            {
+                                'ul': [
+                                    'li', 'li', 'li'
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    'tr' : [
+                        { 'td.label': 'Label!' },
+                        { 'td.input': { 'input#testInput.tableInput[type=\'checkbox\'][value="test"]' : null }}
+                    ]
+                }
+            ]
+        })
+    );
+    tests.push(
+        DOMful.parse({
+            tag: 'div',
+            childs: [
+                'span',
+                'span'
+            ]
+        }, true)
+    );
+    var meow = document.getElementById('meow');
+    if (tests) {
+        for (var i = 0; i < tests.length; i++) {
+            if (Array.isArray(tests[i])) {
+                for (var j = 0; j < tests[i].length; j++) {
+                    meow.appendChild(tests[i][j]);
+                }
+            } else {
+                meow.appendChild(tests[i]);
+            }
+        }
+    }
+    console.log(tests);
+</script>
