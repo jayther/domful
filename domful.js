@@ -99,6 +99,12 @@
             stringToElement: function (elementString) {
                 if (elementString) {
                     var tag, classNames = [], id, i, el, matches, attributes = {}, parts, attrVal;
+                    
+                    //search for any whitespace, which is not an allowed character
+                    matches = elementString.match(/\s/g);
+                    if (matches && matches.length > 0) {
+                        throw new Error('Nested selectors is not allowed. *sob*');
+                    }
                     //get id
                     matches = elementString.match(/\#\-?[_a-zA-Z]+[_a-zA-Z0-9\-]*/g);
                     if (matches && matches.length > 0) {

@@ -87,9 +87,11 @@
         for (var i = 0; i < tests.length; i++) {
             if (Array.isArray(tests[i])) {
                 for (var j = 0; j < tests[i].length; j++) {
-                    meow.appendChild(tests[i][j]);
+                    if (tests[i][j]) {
+                        meow.appendChild(tests[i][j]);
+                    }
                 }
-            } else {
+            } else if (tests[i]) {
                 meow.appendChild(tests[i]);
             }
         }
