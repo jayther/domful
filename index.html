@@ -50,7 +50,7 @@
                     function (e) { console.log('ohai'); }
                 ]
             }
-        }, true)
+        }, 2, true)
     );
     tests.push(
         DOMful.parse({
@@ -67,6 +67,20 @@
                 }
             ]
         })
+    );
+    tests.push(
+        DOMful.parse({
+            'div': {
+                'p': 'test',
+                'p': 'test2'
+            }
+        })
+    );
+    tests.push(
+        DOMful.parse('div#myId.myClass')
+    );
+    tests.push(
+        DOMful.parse({ 'p': 'overflow test' }, 10)
     );
     var meow = document.getElementById('meow');
     if (tests) {

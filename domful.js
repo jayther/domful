@@ -273,22 +273,37 @@
         };
         
         /**
-         * Parses the object or array to HTML elements.
+         * Parses the object, string, or array to HTML elements.
          */
-        parse = function (objOrArr, proper) {
-            var els = null;
-            try {
-                if (objOrArr) {
-                    if (typeof objOrArr === 'object' || typeof objOrArr === 'string') {
-                        els = parser.objectToElements(objOrArr, proper);
+        parse = function (objOrArr, repeat, proper) {
+            var els = null, el = null, i;
+            if (typeof repeat !== 'number') {
+                repeat = 1;
+            }
+            if (repeat > 1) {
+                els = [];
+            }
+            if (repeat > 0) {
+                try {
+                    if (objOrArr) {
+                        if (typeof objOrArr === 'object' || typeof objOrArr === 'string') {
+                            for (i = 0; i < repeat; i += 1) {
+                                el = parser.objectToElements(objOrArr, proper);
+                                if (el && repeat > 1) {
+                                    els.push(el);
+                                } else {
+                                    els = el;
+                                }
+                            }
+                        } else {
+                            throw new Error('Parameter in parse function can only be an object or an array.');
+                        }
                     } else {
-                        throw new Error('Parameter in parse function can only be an object or an array.');
+                        throw new Error('Parameter in parse function cannot be null (only an object or an array).');
                     }
-                } else {
-                    throw new Error('Parameter in parse function cannot be null (only an object or an array).');
+                } catch (e) {
+                    processError(e);
                 }
-            } catch (e) {
-                processError(e);
             }
             return els;
         };
@@ -297,14 +312,19 @@
         /**
          * Parses the object or array to an HTML string.
          */
-        parseToString = function (objOrArr) {
-            var dummy,
-                els;
+        parseToString = function (objOrArr, repeat, proper) {
+            var dummy, els, i;
             try {
-                els = parse(objOrArr);
+                els = parse(objOrArr, repeat, proper);
                 if (els) {
                     dummy = document.createElement('div');
-                    dummy.appendChild(els);
+                    if (isArray(els)) {
+                        for (i = 0; i < els.length; i += 1) {
+                            dummy.appendChild(els[i]);
+                        }
+                    } else {
+                        dummy.appendChild(els);
+                    }
                     return dummy.innerHTML;
                 } else {
                     throw new Error('Creation returned null.');
