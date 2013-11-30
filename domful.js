@@ -17,9 +17,10 @@
         isNode,
         isElement,
         countProps,
+        extendObj,
         DEFAULT_OPTIONS = {
-            errorPrefix: 'DOMful: ',
-            strict: false
+            errorPrefix: '(DOMful) ',
+            strict: true
         },
         DOMful;
     
@@ -45,6 +46,24 @@
         }
         return sum;
     };
+    extendObj = function (base, obj, deep) {
+        var k, t, nObj = {};
+        for (k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                if (typeof obj[k] === 'object' && !isArray(obj[k]) && deep && base.hasOwnProperty(k)) {
+                    nObj[k] = extendObj(base[k], obj[k]);
+                } else {
+                    nObj[k] = obj[k];
+                }
+            }
+        }
+        for (k in base) {
+            if (base.hasOwnProperty(k) && !nObj.hasOwnProperty(k)) {
+                nObj[k] = base[k];
+            }
+        }
+        return nObj;
+    };
     
     //code from: http://stackoverflow.com/questions/384286/javascript-isdom-how-do-you-check-if-a-javascript-object-is-a-dom-object
     //Returns true if it is a DOM node
@@ -68,11 +87,11 @@
     
     //DOMful class
     DOMful = function (opt) {
-        var parse,
+        var self = this,
+            parse,
             parseToString,
             parser,
             processError,
-            options,
             init;
         
         //parser which contains functions necessary to parse CSS selector syntax into elements.
@@ -115,6 +134,7 @@
                             }
                         }
                     }
+                                        
                     // TODO: is there anyway to use regex for this?
                     if (elementString.indexOf('#') !== -1) {
                         tag = elementString.substring(0, elementString.indexOf('#'));
@@ -141,8 +161,23 @@
                 }
                 return null;
             },
-            stringToElementWithContent: function (elementString, content, proper) {
-                var element = parser.stringToElement(elementString), i, childs;
+            stringToElementWithContent: function (opts) {
+                var o = extendObj({
+                        elementString: '',
+                        content: null,
+                        proper: false,
+                        events: null
+                    }, opts, true),
+                    elementString = o.elementString,
+                    content = o.content,
+                    proper = o.proper,
+                    events = o.events,
+                    element = parser.stringToElement(elementString),
+                    i,
+                    k,
+                    childs;
+                
+                //add content if any
                 if (content) {
                     if (typeof content === 'function') {
                         element.innerHTML = content();
@@ -157,44 +192,68 @@
                         } else {
                             element.appendChild(childs);
                         }
-                    } else if (typeof content === 'string') {
-                        element.innerHTML = content;
+                    } else {
+                        element.innerHTML = content.toString();
                     }
                 }
+                
+                //add events if any
+                if (events && typeof events === 'object') {
+                    for (i in events) {
+                        if (events.hasOwnProperty(i)) {
+                            if (typeof events[i] === 'function') {
+                                element.addEventListener(i, events[i], false);
+                            } else if (isArray(events[i])) {
+                                for (k = 0; k < events[i].length; k += 1) {
+                                    if (typeof events[i][k] === 'function') {
+                                        element.addEventListener(i, events[i][k], false);
+                                    }
+                                }
+                            }
+                        } //end events.hasOwnProperty(i)
+                    } //end for (i in events)
+                } //end events
                 return element;
             },
+            //convert an object to elements
             objectToElements: function (objOrArr, proper) {
                 var i, element, elements = [];
-                if (isArray(objOrArr)) {
-                    return parser.arrayToElements(objOrArr, proper, true);
-                } else if (isElement(objOrArr)) {
-                    return objOrArr;
-                } else if (typeof objOrArr === 'object') {
-                    if (proper) {
-                        if (objOrArr.tag) {
-                            element = parser.stringToElementWithContent(
-                                objOrArr.tag,
-                                objOrArr.childs,
-                                proper
-                            );
+                if (objOrArr) {
+                    if (isArray(objOrArr)) {
+                        return parser.arrayToElements(objOrArr, proper, true);
+                    } else if (isElement(objOrArr)) {
+                        return objOrArr;
+                    } else if (typeof objOrArr === 'object') {
+                        //if using "proper" syntax
+                        if (proper || objOrArr.tag) {
+                            element = parser.stringToElementWithContent({
+                                elementString: objOrArr.tag,
+                                content: objOrArr.childs || objOrArr.content,
+                                events: objOrArr.events,
+                                proper: proper
+                            });
                             if (element) {
                                 elements.push(element);
                             }
-                        }
-                    } else {
-                        for (i in objOrArr) {
-                            if (objOrArr.hasOwnProperty(i)) {
-                                element = parser.stringToElementWithContent(i, objOrArr[i], proper);
-                                if (element) {
-                                    elements.push(element);
+                        } else {
+                            for (i in objOrArr) {
+                                if (objOrArr.hasOwnProperty(i)) {
+                                    element = parser.stringToElementWithContent({
+                                        elementString: i,
+                                        content: objOrArr[i],
+                                        proper: proper
+                                    });
+                                    if (element) {
+                                        elements.push(element);
+                                    }
                                 }
                             }
                         }
-                    }
-                } else if (typeof objOrArr === 'string') {
-                    element = parser.stringToElement(objOrArr);
-                    if (element) {
-                        elements.push(element);
+                    } else if (typeof objOrArr === 'string') {
+                        element = parser.stringToElement(objOrArr);
+                        if (element) {
+                            elements.push(element);
+                        }
                     }
                 }
                 if (elements.length === 1) {
@@ -229,11 +288,11 @@
                     throw new Error('Parameter in parse function cannot be null (only an object or an array).');
                 }
             } catch (e) {
-                processError(e.message);
+                processError(e);
             }
             return els;
         };
-        this.parse = parse;
+        self.parse = parse;
         
         /**
          * Parses the object or array to an HTML string.
@@ -251,36 +310,40 @@
                     throw new Error('Creation returned null.');
                 }
             } catch (e) {
-                processError(e.message);
+                processError(e);
             }
             return '';
         };
-        this.parseToString = parseToString;
+        self.parseToString = parseToString;
         
-        processError = function (msg) {
-            if (options.strict) {
-                throw new Error(options.errorPrefix + msg);
+        processError = function (e) {
+            var eIsString = typeof e === 'string';
+            if (self.strict) {
+                if (eIsString) {
+                    throw new Error(self.errorPrefix + e);
+                } else {
+                    e.message = self.errorPrefix + e.message;
+                    throw e;
+                }
             } else {
-                console.warn(options.errorPrefix + msg);
+                if (typeof e === 'string') {
+                    console.warn(self.errorPrefix + e);
+                } else {
+                    console.warn(self.errorPrefix + e.message);
+                }
             }
         };
         
-        init = function () {
-            var i, o = opt || {};
-            options = {};
+        init = function (inst) {
+            var i, o = extendObj(DEFAULT_OPTIONS, opt || {});
             for (i in o) {
-                if (o.hasOwnProperty(i)) {
-                    options[i] = o[i];
-                }
-            }
-            for (i in DEFAULT_OPTIONS) {
-                if (DEFAULT_OPTIONS.hasOwnProperty(i) && !options.hasOwnProperty(i)) {
-                    options[i] = DEFAULT_OPTIONS[i];
+                if (o.hasOwnProperty(i) && !inst.hasOwnProperty(i) && DEFAULT_OPTIONS.hasOwnProperty(i)) {
+                    inst[i] = o[i];
                 }
             }
         };
-        init();
+        init(this);
     };
     
-    window.DOMful = new DOMful();
+    window.DOMful = new DOMful(window.DOMful || null);
 }(window));

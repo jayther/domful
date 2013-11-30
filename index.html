@@ -1,3 +1,8 @@
+<script type="text/javascript">
+    var DOMful = {
+        strict: false
+    };
+</script>
 <script type="text/javascript" src="domful.js"></script>
 <div id="meow">hi</div>
 <script type="text/javascript">
@@ -30,10 +35,38 @@
         DOMful.parse({
             tag: 'div',
             childs: [
-                'span',
-                'span'
-            ]
+                {
+                    tag: 'span',
+                    content: 'meow'
+                },
+                {
+                    tag: 'span',
+                    content: 'woof'
+                }
+            ],
+            events: {
+                'click': [
+                    function (e) { alert('meow'); },
+                    function (e) { console.log('ohai'); }
+                ]
+            }
         }, true)
+    );
+    tests.push(
+        DOMful.parse({
+            'div': [
+                {
+                    tag: 'div.penguins',
+                    content: 'penguins',
+                    events: {
+                        'click': function (e) { alert('penguins'); }
+                    }
+                },
+                {
+                    'div.penguins': 'penguins'
+                }
+            ]
+        })
     );
     var meow = document.getElementById('meow');
     if (tests) {
@@ -47,5 +80,5 @@
             }
         }
     }
-    console.log(tests);
+    //console.log(tests);
 </script>
