@@ -1,6 +1,6 @@
 /**
  * DOMful library. Simple library that helps create HTML elements from JavaScript objects.
- * Author: J'Brian "jayther"
+ * Author: J'Brian "jayther" P
  * 
  */
 /*jslint browser: true*/
