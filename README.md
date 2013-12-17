@@ -11,6 +11,27 @@ There are only two usable functions in DOMful. `DOMful.parse()` is the main func
 
 ---
 
+The functions:
+
+    DOMful.parse({object | array}[, repeat[, proper]]);
+    DOMful.parseToString({object | array}[, repeat[, proper]]);
+
+
+Parameters:
+
+*   `{object | array}`: The object or an array that contains the elements info. If an object is specified or the array contains only one item, AND the `repeat` is not specified or is `1`, the `DOMful.parse` only
+
+*   `repeat`: an integer, specifies the number of times an element is repeated.
+
+*   `proper`: a boolean, specifies whether or not to strictly interpret the object in the "proper" syntax.
+
+
+Notes:
+
+*   `DOMful.parseToString()` only returns string, even if the `repeat` parameter is specified with more than 1. The `repeat` parameter just repeats the string output.
+
+---
+
 A simple example:
 
     var div = DOMful.parse('div#myId.myClass');

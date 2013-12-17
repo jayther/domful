@@ -11,17 +11,18 @@
         Node = window.Node,
         HTMLElement = window.Element,
         console = window.console || { log: function () {}, warn: function () {}},
-        nativeTypes = ['Boolean', 'Number', 'String', 'Function', 'Array', 'Date', 'RegExp', 'Object'],
+        nativeTypes = ['Boolean', 'Number', 'String', 'Function', 'Array', 'Date', 'RegExp', 'Object'], //is this overkill?
         class2type = {},
         isArray,
         isNode,
         isElement,
-        countProps,
         extendObj,
         DEFAULT_OPTIONS = {
+            globalName: 'DOMful',
             errorPrefix: '(DOMful) ',
             strict: true
         },
+        tOpts,
         DOMful;
     
     //populate class2type
@@ -36,15 +37,6 @@
     //borrowed from jQuery's method
     isArray = Array.isArray || function (objOrArr) {
         return objOrArr === null ? String(objOrArr) : class2type[Object.toString().call(objOrArr)] || 'object';
-    };
-    countProps = function (obj) {
-        var i, sum = 0;
-        for (i in obj) {
-            if (obj.hasOwnProperty(i)) {
-                sum += 1;
-            }
-        }
-        return sum;
     };
     extendObj = function (base, obj, deep) {
         var k, t, nObj = {};
@@ -65,6 +57,7 @@
         return nObj;
     };
     
+    //TODO: not sure if we should only accept HTML elements or any DOM node.
     //code from: http://stackoverflow.com/questions/384286/javascript-isdom-how-do-you-check-if-a-javascript-object-is-a-dom-object
     //Returns true if it is a DOM node
     isNode = function (o) {
@@ -228,6 +221,7 @@
                     if (isArray(objOrArr)) {
                         return parser.arrayToElements(objOrArr, proper, true);
                     } else if (isElement(objOrArr)) {
+                        //return as is
                         return objOrArr;
                     } else if (typeof objOrArr === 'object') {
                         //if using "proper" syntax
@@ -262,6 +256,7 @@
                         }
                     }
                 }
+                //return only the element if there's only one.
                 if (elements.length === 1) {
                     return elements[0];
                 }
@@ -270,6 +265,7 @@
             arrayToElements: function (objOrArr, proper, isArr) {
                 var elements = [], i;
                 if (isArr || isArray(objOrArr)) {
+                    //parse each item in array
                     for (i = 0; i < objOrArr.length; i += 1) {
                         elements.push(parser.objectToElements(objOrArr[i], proper));
                     }
@@ -370,6 +366,7 @@
         };
         init(this);
     };
-    
-    window.DOMful = new DOMful(window.DOMful || null);
+    // TODO: better way than this?
+    tOpts = extendObj(DEFAULT_OPTIONS, window.DOMful || {});
+    window[tOpts.globalName] = new DOMful(tOpts);
 }(window));
